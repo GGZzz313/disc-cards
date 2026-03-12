@@ -14,12 +14,14 @@ export default function ManagerSession() {
   const [stage, setStage] = useState<Stage>('create');
   const [roomCode, setRoomCode] = useState('');
   const [sessionName, setSessionName] = useState('');
+  const [managerName, setManagerName] = useState('');
   const [players, setPlayers] = useState<LobbyPlayer[]>([]);
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [cardIndex, setCardIndex] = useState(0);
   const [totalCards, setTotalCards] = useState(0);
   const [submissionUpdate, setSubmissionUpdate] = useState<SubmissionUpdatePayload | null>(null);
   const [profiles, setProfiles] = useState<DiscProfile[]>([]);
+  const [managerProfile, setManagerProfile] = useState<DiscProfile | null>(null);
 
   useEffect(() => {
     socket.connect();
@@ -46,8 +48,9 @@ export default function ManagerSession() {
       setSubmissionUpdate(update);
     });
 
-    socket.on('game_over', ({ profiles }: { profiles: DiscProfile[] }) => {
+    socket.on('game_over', ({ profiles, managerProfile }: { profiles: DiscProfile[]; managerProfile: DiscProfile | null }) => {
       setProfiles(profiles);
+      setManagerProfile(managerProfile);
       setStage('results');
     });
 
@@ -61,9 +64,10 @@ export default function ManagerSession() {
     };
   }, []);
 
-  function handleCreate(name: string) {
-    setSessionName(name);
-    socket.emit('create_session', { sessionName: name }, (res: { success: boolean; code: string }) => {
+  function handleCreate(sessionName: string, managerName: string) {
+    setSessionName(sessionName);
+    setManagerName(managerName);
+    socket.emit('create_session', { sessionName, managerName }, (res: { success: boolean; code: string }) => {
       if (res.success) {
         setRoomCode(res.code);
         setStage('lobby');
@@ -79,6 +83,10 @@ export default function ManagerSession() {
 
   function handleNextCard() {
     socket.emit('next_card');
+  }
+
+  function handleManagerRanking(cardId: string, ranking: string[]) {
+    socket.emit('submit_manager_ranking', { cardId, ranking });
   }
 
   function handleRemovePlayer(id: string) {
@@ -102,10 +110,18 @@ export default function ManagerSession() {
       totalCards={totalCards}
       players={players}
       submissionUpdate={submissionUpdate}
+      managerName={managerName}
       onNextCard={handleNextCard}
+      onManagerRanking={handleManagerRanking}
     />
   );
-  if (stage === 'results') return <ManagerResults profiles={profiles} sessionName={sessionName} />;
+  if (stage === 'results') return (
+    <ManagerResults
+      profiles={profiles}
+      managerProfile={managerProfile}
+      sessionName={sessionName}
+    />
+  );
 
   return null;
 }

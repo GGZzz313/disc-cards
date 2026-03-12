@@ -30,6 +30,8 @@ export interface GameRoom {
   code: string;
   sessionName: string;
   managerId: string;
+  managerName: string;
+  managerPlayer: Player | null; // manager's own card submissions
   players: Record<string, Player>;
   status: 'lobby' | 'playing' | 'results';
   currentCardIndex: number;
@@ -83,4 +85,5 @@ export interface SubmissionUpdatePayload {
 
 export interface ResultsPayload {
   profiles: DiscProfile[];
+  managerProfile: DiscProfile | null;
 }

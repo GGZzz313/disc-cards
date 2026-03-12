@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import { GameRoom, Player, CreateSessionPayload, JoinSessionPayload, SubmitRankingPayload } from '../../shared/types';
+import type { GameRoom, Player, CreateSessionPayload, JoinSessionPayload, SubmitRankingPayload } from '../../shared/types';
 import { CARDS } from './cards';
 import { buildProfile, computeScores } from './scoring';
 
@@ -42,12 +42,19 @@ io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
   // Manager creates a session
-  socket.on('create_session', (payload: CreateSessionPayload, cb) => {
+  socket.on('create_session', (payload: CreateSessionPayload & { managerName: string }, cb) => {
     const code = generateCode();
     const room: GameRoom = {
       code,
       sessionName: payload.sessionName,
       managerId: socket.id,
+      managerName: payload.managerName?.trim() || 'Manager',
+      managerPlayer: {
+        id: socket.id,
+        name: payload.managerName?.trim() || 'Manager',
+        submissions: {},
+        scores: { D: 0, I: 0, S: 0, C: 0 },
+      },
       players: {},
       status: 'lobby',
       currentCardIndex: 0,
@@ -78,7 +85,6 @@ io.on('connection', (socket) => {
     socket.data.roomCode = payload.code;
     socket.data.isManager = false;
 
-    // Notify everyone in the room of the updated player list
     io.to(payload.code).emit('lobby_update', {
       players: Object.values(room.players).map((p) => ({ id: p.id, name: p.name })),
     });
@@ -135,12 +141,21 @@ io.on('connection', (socket) => {
 
     const liveScores = broadcastLiveScores(room);
 
-    // Notify manager of submission progress
     io.to(room.managerId).emit('submission_update', {
       submittedPlayerIds: submittedIds,
       totalPlayers: Object.keys(room.players).length,
       liveScores,
     });
+  });
+
+  // Manager submits their own ranking for the current card
+  socket.on('submit_manager_ranking', (payload: SubmitRankingPayload) => {
+    const code = socket.data.roomCode as string;
+    const room = rooms.get(code);
+    if (!room || room.status !== 'playing' || room.managerId !== socket.id) return;
+    if (!room.managerPlayer) return;
+
+    room.managerPlayer.submissions[payload.cardId] = payload.ranking;
   });
 
   // Manager advances to the next card (or ends the game)
@@ -152,10 +167,10 @@ io.on('connection', (socket) => {
     room.currentCardIndex += 1;
 
     if (room.currentCardIndex >= room.cards.length) {
-      // Game over — compute results
       room.status = 'results';
       const profiles = Object.values(room.players).map(buildProfile);
-      io.to(code).emit('game_over', { profiles });
+      const managerProfile = room.managerPlayer ? buildProfile(room.managerPlayer) : null;
+      io.to(code).emit('game_over', { profiles, managerProfile });
       cb?.({ success: true, done: true });
     } else {
       const card = room.cards[room.currentCardIndex];
