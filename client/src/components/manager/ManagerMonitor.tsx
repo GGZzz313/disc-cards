@@ -1,5 +1,5 @@
 import type { Card, DiscDimension, SubmissionUpdatePayload } from '../../../../shared/types';
-import { DISC_COLORS, DISC_LABELS } from '../../lib/constants';
+import { DISC_COLORS } from '../../lib/constants';
 
 interface Player { id: string; name: string; }
 
