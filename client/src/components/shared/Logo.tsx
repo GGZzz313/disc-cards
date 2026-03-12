@@ -3,17 +3,21 @@ interface Props {
 }
 
 const sizes = {
-  sm: { img: 'h-8 w-8', text: 'text-xl' },
-  md: { img: 'h-12 w-12', text: 'text-3xl' },
-  lg: { img: 'h-20 w-20', text: 'text-5xl' },
+  sm: { img: 'w-36',  text: 'text-xl',  pull: '-mt-4' },
+  md: { img: 'w-56',  text: 'text-3xl', pull: '-mt-7' },
+  lg: { img: 'w-[22rem]', text: 'text-5xl', pull: '-mt-12' },
 };
 
 export default function Logo({ size = 'md' }: Props) {
   const s = sizes[size];
   return (
-    <div className="flex flex-col items-center gap-2">
-      <img src="/excavator.png" alt="CivilDISC-Cards" className={`${s.img} object-contain`} />
-      <h1 className={`${s.text} font-black tracking-tight text-white`}>
+    <div className="flex flex-col items-center">
+      <img
+        src="/excavator.png"
+        alt="CivilDISC-Cards excavator"
+        className={`${s.img} object-contain`}
+      />
+      <h1 className={`${s.pull} ${s.text} font-black tracking-tight text-white relative z-10`}>
         Civil<span className="text-[#ffd700]">DISC</span>-Cards
       </h1>
     </div>
