@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  background-color: #0f172a;
+  color: #f8fafc;
+  font-family: 'Inter', 'DM Sans', system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
