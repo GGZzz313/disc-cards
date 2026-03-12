@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 interface Props {
   onJoin: (code: string, name: string) => void;
+  error?: string;
+  loading?: boolean;
 }
 
-export default function PlayerJoin({ onJoin }: Props) {
+export default function PlayerJoin({ onJoin, error, loading }: Props) {
   const [step, setStep] = useState<'code' | 'name'>('code');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -48,18 +50,22 @@ export default function PlayerJoin({ onJoin }: Props) {
             <input
               type="text"
               placeholder="Your name"
+              maxLength={30}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && name.trim() && onJoin(code, name.trim())}
+              onKeyDown={(e) => e.key === 'Enter' && name.trim() && !loading && onJoin(code, name.trim())}
               className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-[#ffd700] text-lg mb-4"
               autoFocus
             />
+            {error && (
+              <p className="text-red-400 text-sm mb-3 px-1">{error}</p>
+            )}
             <button
               onClick={() => onJoin(code, name.trim())}
-              disabled={!name.trim()}
+              disabled={!name.trim() || loading}
               className="w-full py-4 bg-[#ffd700] text-[#0f172a] font-bold text-lg rounded-xl hover:bg-[#e6c200] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Join Game →
+              {loading ? 'Joining…' : 'Join Game →'}
             </button>
             <button onClick={() => setStep('code')} className="w-full mt-3 text-slate-500 hover:text-slate-300 text-sm">
               ← Change code

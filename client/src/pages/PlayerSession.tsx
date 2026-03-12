@@ -20,6 +20,9 @@ export default function PlayerSession() {
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [myProfile, setMyProfile] = useState<DiscProfile | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [joinError, setJoinError] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [kickedMsg, setKickedMsg] = useState('');
 
   useEffect(() => {
     socket.connect();
@@ -51,7 +54,7 @@ export default function PlayerSession() {
     });
 
     socket.on('kicked', () => {
-      alert('You were removed from the session by the manager.');
+      setKickedMsg('You were removed from the session by the manager.');
       setStage('join');
     });
 
@@ -66,13 +69,17 @@ export default function PlayerSession() {
   }, []);
 
   function handleJoin(code: string, name: string) {
+    setJoining(true);
+    setJoinError('');
     socket.emit('join_session', { code, playerName: name }, (res: { success: boolean; sessionName?: string; error?: string }) => {
+      setJoining(false);
       if (res.success) {
+        setKickedMsg('');
         setPlayerName(name);
         setSessionName(res.sessionName ?? '');
         setStage('lobby');
       } else {
-        alert(res.error ?? 'Could not join session');
+        setJoinError(res.error ?? 'Could not join session');
       }
     });
   }
@@ -91,7 +98,7 @@ export default function PlayerSession() {
     return () => clearTimeout(t);
   }, [countdown, stage]);
 
-  if (stage === 'join') return <PlayerJoin onJoin={handleJoin} />;
+  if (stage === 'join') return <PlayerJoin onJoin={handleJoin} error={joinError || kickedMsg} loading={joining} />;
   if (stage === 'lobby') return <PlayerLobby sessionName={sessionName} playerName={playerName} />;
   if (stage === 'card' && currentCard) return (
     <PlayerCard

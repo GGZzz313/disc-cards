@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import Logo from '../components/shared/Logo';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -6,10 +7,8 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
       <div className="mb-10 text-center">
-        <h1 className="text-5xl font-black tracking-tight text-white mb-2">
-          DISC<span className="text-[#ffd700]">Cards</span>
-        </h1>
-        <p className="text-slate-400 text-lg">
+        <Logo size="lg" />
+        <p className="text-slate-400 text-lg mt-3">
           Behavioural assessment for civil construction teams
         </p>
       </div>

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface Player { id: string; name: string; }
 
 interface Props {
@@ -6,14 +8,22 @@ interface Props {
   players: Player[];
   onStart: () => void;
   onRemovePlayer: (id: string) => void;
+  startError?: string;
 }
 
-export default function ManagerLobby({ roomCode, sessionName, players, onStart, onRemovePlayer }: Props) {
+export default function ManagerLobby({ roomCode, sessionName, players, onStart, onRemovePlayer, startError }: Props) {
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+
+  function confirmRemove(id: string) {
+    onRemovePlayer(id);
+    setPendingRemoveId(null);
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-xl">
         <p className="text-slate-400 text-sm uppercase tracking-widest mb-1">Session</p>
-        <h1 className="text-2xl font-black text-white mb-8">{sessionName}</h1>
+        <h1 className="text-2xl font-black text-white mb-8 truncate">{sessionName}</h1>
 
         {/* Room code */}
         <div className="bg-slate-800 rounded-2xl p-6 mb-6 text-center">
@@ -41,13 +51,30 @@ export default function ManagerLobby({ roomCode, sessionName, players, onStart, 
               {players.map((p) => (
                 <div key={p.id} className="flex items-center gap-2 bg-slate-800 rounded-full px-4 py-2">
                   <div className="w-2 h-2 rounded-full bg-[#ffd700]" />
-                  <span className="text-white font-medium text-sm">{p.name}</span>
-                  <button
-                    onClick={() => onRemovePlayer(p.id)}
-                    className="text-slate-600 hover:text-red-400 ml-1 text-xs transition-colors"
-                  >
-                    ✕
-                  </button>
+                  <span className="text-white font-medium text-sm max-w-[120px] truncate">{p.name}</span>
+                  {pendingRemoveId === p.id ? (
+                    <span className="flex items-center gap-1 ml-1">
+                      <button
+                        onClick={() => confirmRemove(p.id)}
+                        className="text-red-400 hover:text-red-300 text-xs font-bold transition-colors"
+                      >
+                        Remove
+                      </button>
+                      <button
+                        onClick={() => setPendingRemoveId(null)}
+                        className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setPendingRemoveId(p.id)}
+                      className="text-slate-600 hover:text-red-400 ml-1 text-xs transition-colors"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -61,7 +88,10 @@ export default function ManagerLobby({ roomCode, sessionName, players, onStart, 
         >
           Start Game →
         </button>
-        {players.length < 1 && (
+        {startError && (
+          <p className="text-red-400 text-sm text-center mt-2">{startError}</p>
+        )}
+        {!startError && players.length < 1 && (
           <p className="text-center text-slate-500 text-sm mt-2">Need at least 1 player to start</p>
         )}
       </div>

@@ -22,6 +22,7 @@ export default function ManagerSession() {
   const [submissionUpdate, setSubmissionUpdate] = useState<SubmissionUpdatePayload | null>(null);
   const [profiles, setProfiles] = useState<DiscProfile[]>([]);
   const [managerProfile, setManagerProfile] = useState<DiscProfile | null>(null);
+  const [startError, setStartError] = useState('');
 
   useEffect(() => {
     socket.connect();
@@ -76,8 +77,9 @@ export default function ManagerSession() {
   }
 
   function handleStart() {
+    setStartError('');
     socket.emit('start_game', (res: { success: boolean }) => {
-      if (!res.success) alert('Could not start game. Make sure at least one player has joined.');
+      if (!res.success) setStartError('Could not start game. Make sure at least one player has joined.');
     });
   }
 
@@ -101,6 +103,7 @@ export default function ManagerSession() {
       players={players}
       onStart={handleStart}
       onRemovePlayer={handleRemovePlayer}
+      startError={startError}
     />
   );
   if (stage === 'playing' && currentCard) return (
